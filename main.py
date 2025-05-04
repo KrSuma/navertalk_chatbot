@@ -9,7 +9,8 @@ from fastapi.responses import JSONResponse
 import uvicorn
 from openai import OpenAI
 
-from config import OPENAI_API_KEY, VERIFY_TOKEN, NAVERTALK_AUTH_TOKEN, EMBEDDINGS_FILE
+from config import OPENAI_API_KEY, NAVERTALK_AUTH_TOKEN, EMBEDDINGS_FILE
+# from config import NAVERTALK_VERIFY_TOKEN
 from models import NaverTalkEvent, NaverTalkResponse, TextResponseContent
 from chatbot import Chatbot
 
