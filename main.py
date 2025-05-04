@@ -37,7 +37,7 @@ except Exception as e:
 
 # Define a system message
 system_message = """
-You are a Korean chatbot for a website called NaverTalk. Your primary role is to answer user questions 
+You are a Korean chatbot for a website called 비즈톡. Your primary role is to answer user questions 
 using the information provided in the embedded text file.
 
 Instructions:
@@ -70,37 +70,100 @@ async def root():
     return {"message": "NaverTalk Chatbot API is running"}
 
 
+# @app.post("/webhook")
+# async def handle_webhook(event: NaverTalkEvent, authorization: str = Depends(verify_auth_token)):
+#     """Handle incoming webhook events from NaverTalk"""
+#     logger.info(f"Received webhook event: {event.event}")
+#
+#     # Handle verification event
+#     if event.event == "persistentMenu":
+#         logger.info("Processing persistent menu event")
+#         return JSONResponse(status_code = 200, content = {})
+#
+#     # Handle a user message
+#     if event.event == "send" and event.textContent:
+#         user_id = event.user
+#         user_message = event.textContent.text
+#
+#         logger.info(f"User {user_id} sent message: {user_message}")
+#
+#         # Process message with chatbot
+#         response_message = chatbot.chat(user_message)
+#
+#         # Create NaverTalk response
+#         response = NaverTalkResponse(
+#             user = user_id,
+#             textContent = TextResponseContent(text = response_message)
+#         )
+#
+#         logger.info(f"Sending response to user {user_id}: {response_message[:50]}...")
+#         return response.model_dump()
+#
+#     # Return empty response for other events
+#     return JSONResponse(status_code = 200, content = {})
+
 @app.post("/webhook")
-async def handle_webhook(event: NaverTalkEvent, authorization: str = Depends(verify_auth_token)):
-    """Handle incoming webhook events from NaverTalk"""
-    logger.info(f"Received webhook event: {event.event}")
+async def handle_webhook(request: Request):
+    """Handle incoming webhook events from NaverTalk with detailed error handling"""
+    try:
+        # Log raw request data
+        body = await request.json()
+        logger.info(f"Raw webhook data: {body}")
 
-    # Handle verification event
-    if event.event == "persistentMenu":
-        logger.info("Processing persistent menu event")
-        return JSONResponse(status_code = 200, content = {})
+        # Extract headers for debugging
+        headers = dict(request.headers)
+        logger.info(f"Request headers: {headers}")
 
-    # Handle a user message
-    if event.event == "send" and event.textContent:
-        user_id = event.user
-        user_message = event.textContent.text
+        # Verify authentication
+        auth_header = headers.get("authorization")
+        if auth_header != f"ct_{NAVERTALK_AUTH_TOKEN}":
+            logger.error(f"Authentication failed. Expected: ct_{NAVERTALK_AUTH_TOKEN}, Got: {auth_header}")
+            return JSONResponse(status_code=401, content={"error": "Unauthorized"})
 
-        logger.info(f"User {user_id} sent message: {user_message}")
+        # Parse event
+        event_type = body.get("event")
+        logger.info(f"Processing event type: {event_type}")
 
-        # Process message with chatbot
-        response_message = chatbot.chat(user_message)
+        # Handle verification event
+        if event_type == "persistentMenu":
+            logger.info("Processing persistent menu event")
+            return JSONResponse(status_code=200, content={})
 
-        # Create NaverTalk response
-        response = NaverTalkResponse(
-            user = user_id,
-            textContent = TextResponseContent(text = response_message)
-        )
+        # Handle user message
+        if event_type == "send" and "textContent" in body:
+            user_id = body.get("user")
+            text_content = body.get("textContent", {})
+            user_message = text_content.get("text", "")
 
-        logger.info(f"Sending response to user {user_id}: {response_message[:50]}...")
-        return response.model_dump()
+            logger.info(f"User {user_id} sent message: {user_message}")
 
-    # Return empty response for other events
-    return JSONResponse(status_code = 200, content = {})
+            try:
+                # Process message with chatbot
+                response_message = chatbot.chat(user_message)
+                logger.info(f"Generated response: {response_message}")
+            except Exception as e:
+                logger.error(f"Error in chatbot processing: {str(e)}", exc_info=True)
+                response_message = "죄송합니다. 메시지 처리 중 오류가 발생했습니다."
+
+            # Create NaverTalk response format
+            response = {
+                "event": "send",
+                "user": user_id,
+                "textContent": {
+                    "text": response_message
+                }
+            }
+
+            logger.info(f"Sending response: {response}")
+            return JSONResponse(status_code=200, content=response)
+
+        # Handle unrecognized events
+        logger.warning(f"Unhandled event type: {event_type}")
+        return JSONResponse(status_code=200, content={})
+
+    except Exception as e:
+        logger.error(f"Webhook processing error: {str(e)}", exc_info=True)
+        return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 
 if __name__ == "__main__":
