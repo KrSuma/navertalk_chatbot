@@ -1,15 +1,19 @@
 import csv
 from openai import OpenAI
-from os import getenv
+from dotenv import load_dotenv
+import os
 
-# Set up OpenAI API key
-api_key = "sk-None-h43oaqtxSzuBlil0BsqnT3BlbkFJWyaGnIEa2bH3oFncqvFk"
-client = OpenAI(api_key = api_key)
+# Load environment variables from .env file
+load_dotenv()
+
+# Get OpenAI API key from environment variables
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
 
 
 def generate_embedding(text):
     try:
-        response = client.embeddings.create(input = text, model = "text-embedding-3-large")
+        response = client.embeddings.create(input=text, model="text-embedding-3-large")
         return response.data[0].embedding
     except Exception as e:
         print(f"Error generating embedding for text '{text}': {e}")
@@ -17,8 +21,8 @@ def generate_embedding(text):
 
 
 def process_csv(input_file, output_file):
-    with open(input_file, 'r', newline = '', encoding = 'utf-8') as infile, \
-            open(output_file, 'w', newline = '', encoding = 'utf-8') as outfile:
+    with open(input_file, 'r', newline='', encoding='utf-8') as infile, \
+            open(output_file, 'w', newline='', encoding='utf-8') as outfile:
         reader = csv.DictReader(infile)
 
         # Check for the correct column names
@@ -26,7 +30,7 @@ def process_csv(input_file, output_file):
             raise ValueError("Input CSV must contain 'Question' and 'Answer' columns")
 
         fieldnames = reader.fieldnames + ['text', 'embedding']
-        writer = csv.DictWriter(outfile, fieldnames = fieldnames)
+        writer = csv.DictWriter(outfile, fieldnames=fieldnames)
 
         writer.writeheader()
 
@@ -49,5 +53,3 @@ if __name__ == "__main__":
     output_file = "dataset_output.csv"
     process_csv(input_file, output_file)
     print(f"Processing complete. Output written to {output_file}")
-
-
