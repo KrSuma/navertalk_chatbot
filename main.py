@@ -50,13 +50,6 @@ Instructions:
 # Initialize FastAPI
 app = FastAPI(title = "NaverTalk Chatbot API")
 
-
-# Verify request is from NaverTalk
-# async def verify_auth_token(authorization: str = Header(None)):
-#     if authorization != f"ct_{NAVERTALK_AUTH_TOKEN}":
-#         raise HTTPException(status_code = 401, detail = "Unauthorized")
-#     return authorization
-
 async def verify_auth_token(request: Request):
     """Verify authentication with better debugging"""
     headers = dict(request.headers)
@@ -89,39 +82,6 @@ user_sessions = {}
 @app.get("/")
 async def root():
     return {"message": "NaverTalk Chatbot API is running"}
-
-
-# @app.post("/webhook")
-# async def handle_webhook(event: NaverTalkEvent, authorization: str = Depends(verify_auth_token)):
-#     """Handle incoming webhook events from NaverTalk"""
-#     logger.info(f"Received webhook event: {event.event}")
-#
-#     # Handle verification event
-#     if event.event == "persistentMenu":
-#         logger.info("Processing persistent menu event")
-#         return JSONResponse(status_code = 200, content = {})
-#
-#     # Handle a user message
-#     if event.event == "send" and event.textContent:
-#         user_id = event.user
-#         user_message = event.textContent.text
-#
-#         logger.info(f"User {user_id} sent message: {user_message}")
-#
-#         # Process message with chatbot
-#         response_message = chatbot.chat(user_message)
-#
-#         # Create NaverTalk response
-#         response = NaverTalkResponse(
-#             user = user_id,
-#             textContent = TextResponseContent(text = response_message)
-#         )
-#
-#         logger.info(f"Sending response to user {user_id}: {response_message[:50]}...")
-#         return response.model_dump()
-#
-#     # Return empty response for other events
-#     return JSONResponse(status_code = 200, content = {})
 
 
 '''
