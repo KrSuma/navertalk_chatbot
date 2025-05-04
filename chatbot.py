@@ -7,6 +7,7 @@ from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
+
 class Chatbot:
     def __init__(self, index, embeddings, documents, system_message, client: OpenAI):
         self.index = index

@@ -13,4 +13,5 @@ VERIFY_TOKEN = os.getenv("NAVERTALK_VERIFY_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Data settings
-EMBEDDINGS_FILE = os.getenv("EMBEDDINGS_FILE", "biztalk_output.csv")
+INPUT_FILE = os.getenv("INPUT_FILE", "dataset.csv")
+EMBEDDINGS_FILE = os.getenv("EMBEDDINGS_FILE", "dataset_output.csv")

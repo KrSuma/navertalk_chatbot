@@ -34,7 +34,7 @@ except Exception as e:
     logger.error(f"Error loading data: {str(e)}")
     raise
 
-# Define system message
+# Define a system message
 system_message = """
 You are a Korean chatbot for a website called NaverTalk. Your primary role is to answer user questions 
 using the information provided in the embedded text file.
@@ -79,7 +79,7 @@ async def handle_webhook(event: NaverTalkEvent, authorization: str = Depends(ver
         logger.info("Processing persistent menu event")
         return JSONResponse(status_code = 200, content = {})
 
-    # Handle user message
+    # Handle a user message
     if event.event == "send" and event.textContent:
         user_id = event.user
         user_message = event.textContent.text
